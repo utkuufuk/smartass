@@ -1,0 +1,11 @@
+/dist
+/docs
+/public
+/src/assets
+*.hbs
+*.md
+*.sql
+*.tsbuildinfo
+*.gif
+*.png
+

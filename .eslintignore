@@ -1,0 +1,4 @@
+/dist
+/docs
+*.js
+vite.config.ts
