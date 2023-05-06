@@ -10,8 +10,8 @@
     "lint:fix": "npm run lint:eslint:fix && npm run lint:prettier:fix",
     "lint:eslint": "eslint --config .eslintrc.json --report-unused-disable-directives --ext .ts,.tsx -- .",
     "lint:eslint:fix": "eslint --config .eslintrc.json --report-unused-disable-directives --ext .ts,.tsx --fix -- .",
-    "lint:prettier": "prettier --check src",
-    "lint:prettier:fix": "prettier --write src",
+    "lint:prettier": "prettier --check ./**/*",
+    "lint:prettier:fix": "prettier --write ./**/*",
     "preview": "vite preview"
   },
   "dependencies": {

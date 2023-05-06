@@ -1,12 +1,10 @@
 name: CI
 
-concurrency:
-  group: ${{ github.head_ref }}
-  cancel-in-progress: true
-
 on:
   pull_request:
   push:
+    branches:
+      - master
 
 jobs:
   build-lint-test:
