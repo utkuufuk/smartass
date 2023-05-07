@@ -24,5 +24,13 @@ jobs:
       - name: Build
         run: yarn build
 
+      - name: Codegen check
+        run: |
+          if [[ $(git --no-pager diff -- . ) ]]; then
+            echo "Codegen output does not match checked-in files"
+            git --no-pager diff -- .
+            exit 1
+          fi
+
       - name: Lint
         run: yarn lint

@@ -6,67 +6,49 @@ import viteLogo from '/vite.svg'
 import './App.css'
 
 declare global {
-  const gapi: any
-  const google: any
+  const gapi: { load: any; client?: Record<'init' | 'getToken' | 'setToken' | 'calendar', any> }
+  const google: { accounts: { oauth2: { initTokenClient: any; revoke: any } } }
 }
 
-const App = () => {
-  const [events, setEvents] = useState<Array<any>>([])
-  const [authButtonText, setAuthButtonText] = useState('Authorize')
-  const [showSignOutButton, setShowSignOutButton] = useState(false)
-  const [isGapiScriptLoaded, setGapiScriptLoaded] = useState(false)
+const API_KEY = 'AIzaSyCvpiyx2eoTkiwjhBUGk6dC299j5buzfZ4'
+const CLIENT_ID = '396628784843-qbl1vb8voopmtlnspi70chvkola4qlki.apps.googleusercontent.com'
+const DISCOVERY_DOC = 'https://www.googleapis.com/discovery/v1/apis/calendar/v3/rest'
+const SCOPES = 'https://www.googleapis.com/auth/calendar.readonly'
+
+export const App = () => {
   const [googleClient, setGoogleClient] = useState<any>(null)
+  const [events, setEvents] = useState<Array<any>>([])
+  const authToken = gapi.client?.getToken() ?? null
 
   useEffect(() => {
-    const root = document.querySelector('#root')
-    if (root === null) {
-      console.error('[App.tsx - useEffect]: Could not load the root HTML element')
-      return
-    }
-
-    root.addEventListener('gapiInited', () => {
-      console.log('[App.tsx - useEffect]: Google API client loaded event received.')
-      setGapiScriptLoaded(true)
-    })
-    root.addEventListener('gisInited', ({ detail }: any) => {
-      console.log(
-        `[App.tsx - useEffect]: Google Identity Service client loaded event received: ${JSON.stringify(
-          detail,
-        )}`,
-      )
-      console.log(
-        `[App.tsx - useEffect]: Setting googleClient: ${JSON.stringify(detail.googleClient)}`,
-      )
-      detail.googleClient.callback = async (res: any) => {
-        if (res.error !== undefined) {
-          throw res
-        }
-        gapi.client.setToken(res)
-        setShowSignOutButton(true)
-        setAuthButtonText('Refresh')
-        fetchEvents()
-      }
-      setGoogleClient(detail.googleClient)
+    gapi.load('client', () => {
+      gapi.client?.init({ apiKey: API_KEY, discoveryDocs: [DISCOVERY_DOC] }).then(() => {
+        const client = google.accounts.oauth2.initTokenClient({
+          client_id: CLIENT_ID,
+          scope: SCOPES,
+          callback: async (res: any) => {
+            if (res.error !== undefined) {
+              throw res
+            }
+            gapi.client?.setToken(res)
+            fetchUpcomingEvents()
+          },
+        })
+        setGoogleClient(client)
+      })
     })
   }, [])
 
-  const handleAuthClick = () => {
-    fetchEvents()
+  const handleAuth = () => googleClient.requestAccessToken({ prompt: 'consent' })
 
-    // Prompt the user to select a Google Account and ask for consent to share their data
-    // when establishing a new session.
-    // Skip display of account chooser and consent dialog for an existing session.
-    console.log(
-      `[App.tsx - handleAuthClick]: Existing token: ${JSON.stringify(gapi.client.getToken())}`,
-    )
-    if (gapi.client.getToken() === null) {
-      googleClient.requestAccessToken({ prompt: 'consent' })
-    }
-    console.log(`[App.tsx - handleAuthClick]: New token: ${JSON.stringify(gapi.client.getToken())}`)
+  const handleSignout = () => {
+    google.accounts.oauth2.revoke(authToken.access_token)
+    gapi.client?.setToken(null)
+    setEvents([])
   }
 
-  const fetchEvents = () => {
-    gapi.client.calendar.events
+  const fetchUpcomingEvents = () => {
+    gapi.client?.calendar.events
       .list({
         calendarId: 'primary',
         timeMin: new Date().toISOString(),
@@ -76,30 +58,10 @@ const App = () => {
         orderBy: 'startTime',
       })
       .then((response: any) => setEvents(response.result.items))
-      .catch((err: unknown) => {
-        console.error(
-          '[App.tsx - fetchEvents]: Could not load calendar events:',
-          JSON.stringify(err),
-        )
-      })
+      .catch((err: unknown) => console.error('Could not load upcoming calendar events:', err))
   }
 
-  /**
-   *  Sign out the user upon button click.
-   */
-  const handleSignoutClick = () => {
-    const token = gapi.client.getToken()
-    if (token !== null) {
-      google.accounts.oauth2.revoke(token.access_token)
-      gapi.client.setToken('')
-      setEvents([])
-      setAuthButtonText('Authorize')
-      setShowSignOutButton(false)
-    }
-  }
-
-  // Prints the summary and start datetime/date of the events in the authorized user's calendar.
-  const listUpcomingEvents = () =>
+  const listEvents = () =>
     events.length === 0
       ? 'No events found.'
       : events.reduce(
@@ -110,22 +72,22 @@ const App = () => {
   return (
     <>
       <div>
-        <a href="https://vitejs.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
+        <img src={viteLogo} className="logo" alt="Vite logo" />
+        <img src={reactLogo} className="logo react" alt="React logo" />
       </div>
 
-      {isGapiScriptLoaded && googleClient !== null && (
-        <button onClick={handleAuthClick}>{authButtonText}</button>
+      {authToken === null ? (
+        <button onClick={handleAuth}>Authorize</button>
+      ) : (
+        <button onClick={fetchUpcomingEvents}>Refresh</button>
       )}
 
-      {showSignOutButton && <button onClick={handleSignoutClick}>Sign Out</button>}
-      <pre>{listUpcomingEvents()}</pre>
+      {authToken !== null && (
+        <>
+          <button onClick={handleSignout}>Sign Out</button>
+          <pre>{listEvents()}</pre>
+        </>
+      )}
     </>
   )
 }
-
-export default App
