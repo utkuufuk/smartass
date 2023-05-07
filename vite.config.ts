@@ -24,7 +24,7 @@ export default defineConfig({
               )
               return url.pathname.includes('/calendar/v3/calendars')
             },
-            handler: 'NetworkFirst',
+            handler: 'CacheFirst',
             options: {
               cacheName: 'api-cache',
               cacheableResponse: {
