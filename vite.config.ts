@@ -16,8 +16,14 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg}'],
         runtimeCaching: [
           {
-            urlPattern: ({ url }) =>
-              url.pathname.includes('https://content.googleapis.com/calendar/'),
+            urlPattern: ({ url }) => {
+              console.log(
+                `Should cache? (URL pathname ${url.pathname}): ${url.pathname.includes(
+                  '/calendar/v3/calendars',
+                )}`,
+              )
+              return url.pathname.includes('/calendar/v3/calendars')
+            },
             handler: 'NetworkFirst',
             options: {
               cacheName: 'api-cache',
