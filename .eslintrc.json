@@ -15,8 +15,7 @@
   "parserOptions": {
     "ecmaVersion": "latest",
     "project": [
-      "tsconfig.json",
-      "tests/tsconfig.test.json"
+      "tsconfig.json"
     ],
     "sourceType": "module",
     "ecmaFeatures": {
@@ -96,7 +95,7 @@
     "no-case-declarations": ["error"],
     "no-compare-neg-zero": ["error"],
     "no-cond-assign": ["error", "except-parens"],
-    "no-console": ["error"],
+    "no-console": ["warn"],
     "no-const-assign": ["error"],
     "no-debugger": ["error"],
     "no-dupe-args": ["error"],
@@ -169,34 +168,5 @@
     "valid-typeof": ["error", {"requireStringLiterals": true}],
     "wrap-iife": ["error", "outside"],
     "yoda": ["error", "never", {"exceptRange": true}]
-  },
-  "overrides": [
-    {
-      "files": ["tests/**/*.ts*"],
-      "rules": {
-        "@typescript-eslint/strict-boolean-expressions": ["off"],
-        "no-console": ["off"]
-      }
-    },
-    {
-      "files": ["client/**/*.ts*", "pages/**/*.tsx"],
-      "rules": {
-        "no-console": ["off"],
-        "node/no-process-env": ["off"]
-      }
-    },
-    {
-      "files": ["server/src/logger.ts"],
-      "rules": {
-        "no-console": ["off"]
-      }
-    },
-    {
-      "files": ["server/scripts/**/*.ts"],
-      "rules": {
-        "no-console": ["off"],
-        "node/no-process-env": ["off"]
-      }
-    }
-  ]
+  }
 }
