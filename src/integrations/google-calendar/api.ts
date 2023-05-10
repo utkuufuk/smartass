@@ -11,12 +11,12 @@ const Timestamp = t.type({ dateTime: DateFromString }, 'Timestamp')
 export const CalendarEvent = t.intersection(
   [
     t.type({
+      calendarId: NonEmptyString,
       start: Timestamp,
       end: Timestamp,
     }),
     t.partial({
       summary: NonEmptyString,
-      visibility: t.literal('private'),
     }),
   ],
   'CalendarEvent',
@@ -52,19 +52,11 @@ export const fetchEvents = async ({
     return pipe(
       response.result.items,
       RA.filter((e: any) => e.start.dateTime !== undefined && e.end.dateTime !== undefined),
+      RA.map((e: any) => ({ ...e, calendarId })),
       t.array(CalendarEvent).decode,
       E.mapLeft(errors => failure(errors).join(', ')),
     )
   } catch (err) {
     return E.left((err as Error).message)
   }
-}
-
-export const formatEvent = (event: CalendarEvent) => {
-  const start = event.start.dateTime
-  const end = event.end.dateTime
-  const date = start.toString().slice(4, 10)
-  return `[${event.visibility === 'private' ? 'W' : 'P'}] ${event.summary} | ${date} ${start
-    .toLocaleTimeString('tr-TR')
-    .slice(0, 5)}-${end.toLocaleTimeString('tr-TR').slice(0, 5)}`
 }

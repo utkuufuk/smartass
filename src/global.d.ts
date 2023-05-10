@@ -1,6 +1,22 @@
-declare global {
-  const gapi: { load: any; client?: Record<'init' | 'getToken' | 'setToken' | 'calendar', any> }
-  const google: { accounts: { oauth2: { initTokenClient: any; revoke: any } } }
+export type InitTokenClientArgs = {
+  client_id: string
+  scope: string
+
+  callback: (any) => Promise<any>
 }
 
-export {}
+declare global {
+  const gapi: {
+    load: (name: string, callback: () => void) => void
+    client?: Record<'init' | 'getToken' | 'setToken' | 'calendar', any>
+  }
+
+  const google: {
+    accounts: {
+      oauth2: {
+        initTokenClient: (InitTokenClientArgs) => any
+        revoke: (string) => void
+      }
+    }
+  }
+}

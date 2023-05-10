@@ -6,9 +6,13 @@ import reactLogo from '/react.svg'
 import viteLogo from '/vite.svg'
 
 import './App.css'
-import * as gcal from './google-calendar'
+import * as gcal from '../integrations/google-calendar'
 
-const CALENDAR_IDS = ['primary', `${'utku'}${'@'}${'portchain'}${'.'}${'com'}`]
+const CALENDAR_IDS = [
+  `${'utku'}${'ufuk'}${'@'}${'gmail'}${'.'}${'com'}`,
+  `${'utku'}${'@'}${'portchain'}${'.'}${'com'}`,
+]
+const MAX_EVENT_SUMMARY_LENGTH = 25
 
 export const App = () => {
   const [authClient, setAuthClient] = useState<any>(null)
@@ -50,11 +54,12 @@ export const App = () => {
 
   const stringifyEvents = () => {
     const allEvents = Object.values(events).flat()
+    const maxSourceLength = Math.max(...allEvents.map(e => stringifyEventSource(e).length))
     return allEvents.length === 0
       ? 'No events found.'
       : allEvents
           .sort((a, b) => (a.start.dateTime > b.start.dateTime ? 1 : -1))
-          .reduce((str, event) => `${str}${gcal.formatEvent(event)}\n`, '')
+          .reduce((str, event) => `${str}${formatEvent(event, maxSourceLength)}\n`, '')
   }
 
   return (
@@ -75,3 +80,23 @@ export const App = () => {
     </>
   )
 }
+
+const formatEvent = (event: gcal.CalendarEvent, maxEventSourceLength: number) => {
+  const start = event.start.dateTime
+  const end = event.end.dateTime
+  const date = start.toString().slice(4, 10)
+  const startStr = start.toLocaleTimeString('tr-TR').slice(0, 5)
+  const endStr = end.toLocaleTimeString('tr-TR').slice(0, 5)
+  const source =
+    stringifyEventSource(event).toUpperCase() +
+    ' '.repeat(maxEventSourceLength - stringifyEventSource(event).length)
+  let summary = event.summary ?? '<private>'
+  summary =
+    summary.length > MAX_EVENT_SUMMARY_LENGTH
+      ? `${summary.slice(0, MAX_EVENT_SUMMARY_LENGTH - 3)}...`
+      : summary + ' '.repeat(MAX_EVENT_SUMMARY_LENGTH - summary.length)
+  return `${date} | ${startStr}-${endStr} | ${source} | ${summary}`
+}
+
+const stringifyEventSource = (event: gcal.CalendarEvent) =>
+  event.calendarId.split('@')[1].split('.')[0]
